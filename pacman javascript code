@@ -121,7 +121,9 @@ if ((markdotsmall.length !== smallxx.length) ||
         // is pacman touching the big dot?    
         if (dist(pX, pY, bigxx[bd], bigyy[bd]) < 20) {
             // yes, he is touching. increase the score
-           score+= BIG_DOT_TOUCH_SCORE;
+           score += BIG_DOT_TOUCH_SCORE;
+           numLives++;
+           
            // eat the dot - it will not be drawn next time
             markdotbig[bd] = 0;
             dotsRemaining --;
