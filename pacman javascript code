@@ -1,0 +1,297 @@
+
+background(0, 0, 0); // background
+
+// color of pacman
+fill(255, 255, 0); // yellow
+
+// pacman variables
+var pX = 200; // starting X coordinate for pacman
+var pY = 255; // starting Y coordinate for pacman
+var XMIN = 0; // most left pacman can go
+var XMAX = 400; // most right pacman can go
+var YMIN = 0; // highest pacman can go
+var YMAX = 400; // lowest pacman can go
+
+// monster variables
+var monster = getImage("avatars/spunky-sam");
+var monsterX = 14; // starting X coordinate for monster 1
+var monsterY = 1; // starting Y coordinate for monster 1
+var monsterX2 = 85; //starting X coordinate for monster 2
+var monsterY2 = 355; //starting Y coordinate for monster 2
+var monsterX3 = 0; //starting X coordinate for monster 3
+var monsterY3 = 140; //starting Y coordinate for monster 3
+var monsterX4 = 355; //starting X coordinate for monster 4
+var monsterY4 = 140; //starting Y coordinate for monster 4
+var monsterXMIN = 0; // most left monster can go
+var monsterXMAX = 400; // most right monster can go
+var monsterYMIN = 0; // highest monster can go
+var monsterYMAX = 400; // lowest monster can go
+var score = 0; // score
+
+// big dot variables
+var markdotbig = [1,1,1,1]; //number of dots that pacman will eat
+var bigxx = [15, 385, 15, 385]; // x of the big dots
+var bigyy = [15, 15, 385, 385]; // y of the big dots
+var BIG_DOT_TOUCH_SCORE = 100; // points for eating a big dot
+
+// small dot variables
+var markdotsmall = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]; // number of dots that pacman will eat
+var smallxx = [45, 75, 105, 135, 165, 195, 195, 230, 260, 290, 320, 350, 45, 75, 105, 135, 165, 195, 195, 230, 260, 290, 320, 350, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 385, 385, 385, 385, 385, 385, 385, 385, 385, 385, 385, 50, 80, 110, 140, 170, 200, 230, 260, 290, 320, 350, 50, 80, 110, 140, 170, 200, 230, 260, 290, 320, 350, 140, 140, 140, 275, 275, 275]; // small dot x
+var smallyy = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 385, 385, 385, 385, 385, 385, 385, 385, 385, 385, 385, 385, 50, 80, 110, 140, 170, 200, 230, 260, 290, 320, 350, 50, 80, 110, 140, 170, 200, 230, 260, 290, 320, 350, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 260, 170, 200, 230, 170, 200, 230]; // small dot y
+
+var SMALL_DOT_TOUCH_SCORE = 50; // points for eating a small dot
+
+var dotsRemaining = markdotsmall.length + markdotbig.length;
+
+// life variables
+var click = 0;
+var noclick = 0;
+var click_threshold = 20;
+var numLives = 5;
+
+// START THE CODE!!
+var draw = function() {
+   background(0, 0, 0);
+
+// make sure markdotbig array and big dot array lengths match. Otherwise dots will not be eaten properly
+if ((markdotbig.length !== bigxx.length) || 
+     (markdotbig.length !== bigyy.length)) {
+    text("big array lengths not matching", 170,200);
+}
+
+// make sure markdotsmall array and small dot array lengths match. Otherwise dots will not be eaten properly
+if ((markdotsmall.length !== smallxx.length) || 
+     (markdotsmall.length !== smallyy.length)) {
+         text(markdotsmall.length, 240, 200);
+         text(smallxx.length, 240, 300);
+    text("small array lengths not matching", 270,200);
+}
+
+    var oldpX = pX;
+    var oldpY = pY;
+    
+    // pacman goes right
+    if (keyIsPressed && keyCode === RIGHT) {
+        pX++;
+    }
+    
+    // pacman goes left
+    if (keyIsPressed && keyCode === LEFT) {
+        pX--;
+    }
+    
+    // pacman goes up
+    if (keyIsPressed && keyCode === UP) {
+        pY--;
+    }
+    
+    // pacman goes down
+    if (keyIsPressed && keyCode === DOWN) {
+        pY++;
+    }
+    
+    // pacman goes out of the boundary on the right side and come in on the left side
+    if (pX > XMAX) {
+        pX = XMIN;
+    }
+    
+    // pacman goes out of the boundary on the left side and come in on the right side
+    if (pX < XMIN) {
+        pX = XMAX; 
+    }
+    
+    // pacman goes out of the boundary on the top and come in on the bottom
+    if (pY < YMIN) {
+        pY = YMAX;
+    }
+    
+    // pacman goes out of the boundary on the bottom and come in on the top
+    if (pY > YMAX) {
+        pY = YMIN;
+    }
+    
+    // draw the big dots that pacman eats to be able to eat the monsters and get points
+    
+    fill(255, 255, 255);
+    for (var bd = 0; bd < markdotbig.length; bd++) {
+        
+        if (markdotbig[bd] === 1) {
+            ellipse(bigxx[bd], bigyy[bd], 15, 15); 
+        
+        // is pacman touching the big dot?    
+        if (dist(pX, pY, bigxx[bd], bigyy[bd]) < 20) {
+            // yes, he is touching. increase the score
+           score+= BIG_DOT_TOUCH_SCORE;
+           // eat the dot - it will not be drawn next time
+            markdotbig[bd] = 0;
+            dotsRemaining --;
+        }   
+    }
+        }
+        
+    // draw the small dots that pacman eats to get points
+    for (var sd = 0; sd < markdotsmall.length; sd++) {
+        
+        if (markdotsmall[sd] === 1) {
+            ellipse(smallxx[sd],smallyy[sd], 7, 7); 
+        
+        // is pacman touching the small dot?    
+      if (dist(pX, pY, smallxx[sd], smallyy[sd]) < 20) {
+         // yes, he is
+           score+= SMALL_DOT_TOUCH_SCORE;
+            markdotsmall[sd] = 0;
+            dotsRemaining --;
+        }   
+    }
+        }
+    
+    fill(255, 255, 0);
+    ellipse(pX, pY, 30, 30); // pacman
+    
+    
+    // monster 1
+    image(monster, monsterX, monsterY, 45, 40);
+    monsterX += 1.25;
+    
+    // monster 2
+    image(monster, monsterX2, monsterY2, 45, 40);
+    monsterX2 -= 1.25;
+    
+    // monster 3
+    image(monster, monsterX3, monsterY3, 45, 40);
+    monsterY3 += 1.25;
+    
+    // monster 4
+    image(monster, monsterX4, monsterY4, 45, 40);
+    monsterY4 -= 1.25;
+    
+    // monster 1 goes out of the boundary on the right side and come in on the left side
+    if(monsterX >= monsterXMAX) {
+        monsterX = monsterXMIN;
+    }
+    
+    // monster 2 goes out of the boundary on the right side and come in on the left side
+    if(monsterX2 <= monsterXMIN) {
+        monsterX2 = monsterXMAX;
+    }
+    
+    // monster 3 goes out of the boundary on the bottom and comes in on the top
+    if(monsterY3 >= monsterYMAX) {
+        monsterY3 = monsterYMIN;
+    }
+    
+    // monster 4 goes out of the boundary on the bottom and comes in on the top
+    if(monsterY4 <= monsterYMIN) {
+        monsterY4 = monsterYMAX;
+    }
+    
+    fill(0, 0, 255);
+    
+    // Circle
+    var cX = 200;
+    var cY = 200;
+    var cW = 75;
+    var cH = cW;
+    var offset = 15;
+    
+    ellipse(cX, cY, cW, cH);
+    if(abs(pX-cX) <= cW/2+offset && abs(pY-cY)<= cW/2+offset) {
+        pX = oldpX;
+        pY = oldpY;
+    } 
+
+    // Rect 1
+    var r1X = 50;
+    var r1Y = 47;
+    var r1W = 300;
+    var r1H = 75;
+    var offset = 15;
+    
+    rect(r1X, r1Y, r1W, r1H);
+    
+    if(pX >= (r1X-offset) && pX <= (r1X + r1W + offset) && pY >= (r1Y-offset) && pY <= (r1Y + r1H + offset)) {
+        pX = oldpX;
+        pY = oldpY;
+    }
+    
+    fill(255, 255, 255);
+    textSize(15);
+    text("Score: " + (score-50), 170, 75); // score text
+    text("Number of lives left: " + numLives, 135, 100);
+    fill(0, 0, 255);
+    
+    // Rect 2
+    var r2X = 50;
+    var r2Y = 277;
+    var r2W = 300;
+    var r2H = 75;
+    
+    rect(r2X, r2Y, r2W, r2H);
+    if(pX >= (r2X-offset) && pX <= (r2X + r2W + offset) && pY >= (r2Y-offset) && pY <= (r2Y + r2H + offset)) {
+        pX = oldpX;
+        pY = oldpY;
+    }
+    
+    // Rect 3
+    var r3X = 48;
+    var r3Y = 168;
+    var r3W = 50;
+    var r3H = 63;
+    
+    rect(r3X, r3Y, r3W, r3H);
+    if(pX >= (r3X-offset) && pX <= (r3X + r3W + offset) && pY >= (r3Y-offset) && pY <= (r3Y + r3H + offset)) {
+        pX = oldpX;
+        pY = oldpY;
+    }
+    
+    // Rect 4
+    var r4X = 300;
+    var r4Y = 168;
+    var r4W = 50;
+    var r4H = 63;
+    
+    rect(r4X, r4Y, r4W, r4H);
+    if(pX >=(r4X-offset) && pX <=(r4X + r4W + offset) && pY >= (r4Y - offset) && pY <= (r4Y + r4H + offset)) {
+        pX = oldpX;
+        pY = oldpY;
+    }
+    
+    // pacman and monster collide
+    var diff1 = dist(monsterX, monsterY, pX, pY);
+    var diff2 = dist(monsterX2, monsterY2, pX, pY);
+    var diff3 = dist(monsterX3, monsterY3, pX, pY);
+    var diff4 = dist(monsterX4, monsterY4, pX, pY);
+
+    if (diff1 < 30 || diff2 < 30 || diff3 < 30 || diff4 < 30) {
+        background(247, 0, 132);
+        textSize(100);
+        text("UH OH!!", 15, 150, 400, 200);
+        textSize(25);
+        text("You lost a life!", 100, 325, 400, 200);
+        click++;
+        noclick = 0;
+        if (click > click_threshold) {
+            numLives--;    
+            click = 0;
+        }
+    } else {
+        noclick++;
+    }
+    if (noclick > 10) {
+        click=0;
+    }
+
+    if(numLives<=0) {
+        background(18, 255, 188);
+        textSize(113);
+        text("GAME OVER", 25, 50, 400, 400);
+    }
+
+    fill(255, 255, 0);
+    
+    if(dotsRemaining === 0) {
+        background(250, 132, 5);
+        textSize(95);
+        text("YOU WIN!!!!!!", 35, 75, 400, 400);
+    }
+};
